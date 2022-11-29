@@ -14,10 +14,9 @@
  *        __data __at (0x30) type var;
  * to declare a variable var of the type
  */
-__data __at (0x35) ThreadID currentThread;
-__data __at (0x3D) char currentChar;
-__data __at (0x3E) char shared;
-__data __at (0x3F) char buffer;
+__data __at (0x3A) char currentChar;
+__data __at (0x3B) char shared;
+__data __at (0x3C) char buffer;
 
 /* [8 pts] for this function
  * the producer in this test program generates one characters at a
@@ -57,7 +56,7 @@ void Producer(void) {
 void Consumer(void) {
     /* @@@ [2 pt] initialize Tx for polling */
 	TMOD = 0x20;
-	TH1 = (char)-6;
+	TH1 = -6;
 	SCON = 0x50;
 	TR1 = 1;
 	TI = 1;
@@ -67,7 +66,7 @@ void Consumer(void) {
          * poll for Tx to finish writing (TI),
          * then clear the flag
          */
-		if (buffer == 0)
+		if (!buffer)
   			ThreadYield();
 		else {
 			// polling
@@ -92,12 +91,8 @@ void main(void) {
      * Because both are infinite loops, there is no loop
      * in this function and no return.
      */
-	shared = 'A';
 	buffer = 0;
-	currentThread =	ThreadCreate(Producer);
-	__asm
-		mov sp, 0x30
-	__endasm;
+	ThreadCreate(Producer);
 	Consumer();
 }
 

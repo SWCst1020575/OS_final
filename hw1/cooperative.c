@@ -18,6 +18,7 @@ __data __at (0x34) char bitmap;
 __data __at (0x35) ThreadID currentThread;
 __data __at (0x36) char oldThreadSP;
 __data __at (0x37) ThreadID newThread;
+__data __at (0x38) ThreadID threadNum;
 
 
 
@@ -90,10 +91,8 @@ void Bootstrap(void)
      *     so that it starts running main().
      */
 	bitmap = 0;
-	threadSP[0] = 0x3F;
-	threadSP[1] = 0x4F;
-	threadSP[2] = 0x5F;
-	threadSP[3] = 0x6F;
+	for(int i=0;i<4;i++)
+		threadSP[i] = 0x3F + 0x10 * i;
 	currentThread = ThreadCreate(main);
 	RESTORESTATE;
 }
@@ -156,15 +155,13 @@ ThreadID ThreadCreate(FunctionPtr fp)
      */
 		
 	// a, b
-	char count = 1;
-	for(int i=0;i<4;i++){
-		if(bitmap & count == 0){
-			newThread = i;
-			bitmap = bitmap | count;
+	for(threadNum=0;threadNum<4;threadNum++)
+		if(!(bitmap & (1 << threadNum))){
+			newThread = threadNum;
+			bitmap |= (1 << threadNum);
 			break;
 		}
-		count << 1;
-	}
+	
 	// c
 	oldThreadSP = SP;
 	SP = threadSP[newThread];
@@ -239,7 +236,7 @@ void ThreadExit(void)
      * and set current thread to another valid ID.
      * Q: What happens if there are no more valid threads?
      */
-	bitmap = bitmap ^ (1 << currentThread);
+	bitmap ^= (1 << currentThread);
 	do{		
 		currentThread++;
 		if(currentThread > 3)

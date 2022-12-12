@@ -1,4 +1,14 @@
 *.Identifier
 *.json
+*.rst
+*.lst
+*.rel
+*.asm
+*.sym
+*.hex
+*.map
+*.rst
+*.lk
+*.mem
 
 /test/*

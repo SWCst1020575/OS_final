@@ -11,13 +11,12 @@
 #define CNAME(s) _ ## s
 #define LABEL(label) label ## $
 
-
-#define SemaphoreWaitBody(s, label){ 	\
-	__asm							 	\
-		label:	MOV ACC, CNAME(s)		\
-				JZ  label				\
-	   			dec  CNAME(s) 			\
-	__endasm;							\
+#define SemaphoreWaitBody(s, label){ 				\
+	__asm							 				\
+		LABEL(label):	MOV ACC, CNAME(s)			\
+						JZ  LABEL(label)			\
+	   					DEC  CNAME(s) 				\
+	__endasm;										\
 }
 
 // signal() semaphore s

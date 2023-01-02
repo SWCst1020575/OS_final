@@ -28,8 +28,8 @@ void Producer(void) {
             // ThreadYield();
         }
         */
-        SemaphoreWaitBody(empty, LABEL(__COUNTER__) );
-        SemaphoreWaitBody(mutex, LABEL(__COUNTER__) );
+        SemaphoreWaitBody(empty, __COUNTER__);
+        SemaphoreWaitBody(mutex, __COUNTER__);
         __critical{
             shared = currentChar;
             if (currentChar == 'Z')
@@ -65,16 +65,17 @@ void Consumer(void) {
             // ThreadYield();
         }
         */
-        SemaphoreWaitBody(full,  LABEL(__COUNTER__));
-        SemaphoreWaitBody(mutex,  LABEL(__COUNTER__));
+        SemaphoreWaitBody(full, __COUNTER__);
+        SemaphoreWaitBody(mutex, __COUNTER__);
         __critical{
+            // polling
+            while(!TI){}
             SBUF = shared;
+            TI = 0;
         }
         SemaphoreSignal(mutex);
         SemaphoreSignal(empty);
-        // polling
-        while( !TI ){}
-        TI = 0;
+        
     }
 }
 

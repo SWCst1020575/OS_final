@@ -76,7 +76,8 @@ ThreadID ThreadCreate(FunctionPtr fp) {
 	__endasm;
     // e
     __asm
-		MOV A, 0x00 PUSH ACC        // ACC
+		MOV A, 0x00
+        PUSH ACC                    // ACC
 		PUSH ACC          			// B
 		PUSH ACC      				// DPL
 		PUSH ACC  					// DPH

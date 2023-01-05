@@ -11,7 +11,7 @@ void SemaphoreCreate(char *s, char n) {
 }
 
 __data __at(0x30) char threadSP[4];
-__data __at(0x34) char bitmap;
+__data __at(0x34) char bitmap; //check if thread exist
 __data __at(0x35) ThreadID currentThread;
 __data __at(0x36) char oldThreadSP;
 __data __at(0x37) ThreadID newThread;
@@ -50,27 +50,38 @@ void Bootstrap(void) {
 
     for (int i = 0; i < 4; i++)
         threadSP[i] = 0x3F + 0x10 * i;
-    nextThread = 1;
     currentThread = ThreadCreate(main);
     RESTORESTATE;
 }
 
 ThreadID ThreadCreate(FunctionPtr fp) {
-    if (bitmap == 0xff)
+    if (bitmap == 0x15)
         return -1;
-    EA = 0;
+    //EA = 0;
     // a, b
-    newThread = -1;
+    //__critical{
     for (threadNum = 0; threadNum < 4; threadNum++)
         if (!(bitmap & (1 << threadNum))) {
             newThread = threadNum;
             bitmap |= (1 << threadNum);
             break;
-        }
-
+        }/*
+        if( !( bitmap & 1 ) ){
+            bitmap = bitmap | 1;
+            newThread = 0;
+        }else if( !( bitmap & 2 ) ){
+            bitmap = bitmap | 2;
+            newThread = 1;
+        }else if( !( bitmap & 4 ) ){
+            bitmap = bitmap | 4;
+            newThread = 2;
+        }else if( !( bitmap & 8 ) ){
+            bitmap = bitmap | 8;
+            newThread = 3;
+        }*/
     // c
     oldThreadSP = SP;
-    SP = threadSP[newThread];
+    SP = (0x3F) + (0x10) * newThread;
 
     // d
     __asm
@@ -95,9 +106,9 @@ ThreadID ThreadCreate(FunctionPtr fp) {
     threadSP[newThread] = SP;
     // h
     SP = oldThreadSP;
-
+    //}
     // i
-    EA = 1;
+    //EA = 1;
     return newThread;
 }
 
@@ -135,23 +146,32 @@ void ThreadExit(void) {
 void myTimer0Handler() {
     EA = 0;
     SAVESTATE;
-    /*
-    // from yield
+    SAVERIGISTER;
+    /*if (currentThread != 0) {
+        // from producer to consumer
+        currentThread = 0;
+    } else {
+        // determine comsumer to which producer
+        currentThread = nextThread;
+        nextThread++;
+        if (nextThread >= 3)
+            nextThread = 1;   
+    }*/
     do {
         currentThread++;
         if (currentThread > 3)
             currentThread = 0;
         if (bitmap & (1 << currentThread))
             break;
-    } while (1);*/
-    if (currentThread != 0) {
-        // from producer to consumer
-        currentThread = 0;
-    } else {
-        // determine comsumer to which producer
-        currentThread = nextThread;
-        nextThread = (nextThread == 1) ? 2 : 1;
-    }
+    } while (1);
+    /*do{
+         currentThread = (currentThread < 3 ) ?  currentThread+1 : 0;
+         if( currentThread == 0 && bitmap & 1 )break;
+         else if( currentThread == 1 && bitmap & 2 )break;
+         else if( currentThread == 2 && bitmap & 4)break;
+         else if( currentThread == 3 && bitmap & 8 )break; 
+      } while (1);*/
+    RESTORERIGISTER;
     RESTORESTATE;
     EA = 1;
     __asm

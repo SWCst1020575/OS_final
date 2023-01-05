@@ -7,6 +7,7 @@
 
 #define MAXTHREADS 4 /* not including the scheduler */
 /* the scheduler does not take up a thread of its own */
+#define RR 5  
 
 #define CNAME(s) _ ## s
 #define LABEL(label) label ## $

@@ -43,7 +43,6 @@ extern void main(void);
 
 void Bootstrap(void) {
     bitmap = 0;
-
     TMOD = 0;   // timer 0 mode 0
     IE = 0x82;  // enable timer 0 interrupt; keep consumer polling
     TR0 = 1;    // set bit TR0 to start running timer 0
@@ -57,28 +56,21 @@ void Bootstrap(void) {
 ThreadID ThreadCreate(FunctionPtr fp) {
     if (bitmap == 0x15)
         return -1;
-    //EA = 0;
     // a, b
-    //__critical{
-    for (threadNum = 0; threadNum < 4; threadNum++)
-        if (!(bitmap & (1 << threadNum))) {
-            newThread = threadNum;
-            bitmap |= (1 << threadNum);
-            break;
-        }/*
+    __critical{
         if( !( bitmap & 1 ) ){
-            bitmap = bitmap | 1;
+            bitmap |= 1;
             newThread = 0;
         }else if( !( bitmap & 2 ) ){
-            bitmap = bitmap | 2;
+            bitmap |= 2;
             newThread = 1;
         }else if( !( bitmap & 4 ) ){
-            bitmap = bitmap | 4;
+            bitmap |= 4;
             newThread = 2;
         }else if( !( bitmap & 8 ) ){
-            bitmap = bitmap | 8;
+            bitmap |= 8;
             newThread = 3;
-        }*/
+        }
     // c
     oldThreadSP = SP;
     SP = (0x3F) + (0x10) * newThread;
@@ -106,9 +98,8 @@ ThreadID ThreadCreate(FunctionPtr fp) {
     threadSP[newThread] = SP;
     // h
     SP = oldThreadSP;
-    //}
+    }
     // i
-    //EA = 1;
     return newThread;
 }
 
@@ -147,30 +138,13 @@ void myTimer0Handler() {
     EA = 0;
     SAVESTATE;
     SAVERIGISTER;
-    /*if (currentThread != 0) {
-        // from producer to consumer
-        currentThread = 0;
-    } else {
-        // determine comsumer to which producer
-        currentThread = nextThread;
-        nextThread++;
-        if (nextThread >= 3)
-            nextThread = 1;   
-    }*/
     do {
         currentThread++;
-        if (currentThread > 3)
+        if (currentThread >= 3)
             currentThread = 0;
         if (bitmap & (1 << currentThread))
             break;
     } while (1);
-    /*do{
-         currentThread = (currentThread < 3 ) ?  currentThread+1 : 0;
-         if( currentThread == 0 && bitmap & 1 )break;
-         else if( currentThread == 1 && bitmap & 2 )break;
-         else if( currentThread == 2 && bitmap & 4)break;
-         else if( currentThread == 3 && bitmap & 8 )break; 
-      } while (1);*/
     RESTORERIGISTER;
     RESTORESTATE;
     EA = 1;

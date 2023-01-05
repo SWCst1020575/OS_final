@@ -14,6 +14,7 @@ __data __at(0x26) char mutex;
 __data __at(0x27) char empty;
 __data __at(0x28) char lock1;
 __data __at(0x29) char lock2;
+__data __at(0x2A) char RRcount;
 
 void Producer1(void) {
     currentChar1 = 'A';
@@ -27,10 +28,16 @@ void Producer1(void) {
                 currentChar1 = 'A';
             else
                 currentChar1++;
+            RRcount--;
         }
         SemaphoreSignal(mutex);
         SemaphoreSignal(full);
-        SemaphoreSignal(lock2);
+        if(RRcount == 0){
+            RRcount = 5;
+            SemaphoreSignal(lock2);
+        }
+        else
+            SemaphoreSignal(lock1);
     }
 }
 void Producer2(void) {
@@ -45,10 +52,16 @@ void Producer2(void) {
                 currentChar2 = '0';
             else
                 currentChar2++;
+            RRcount--;
         }
         SemaphoreSignal(mutex);
         SemaphoreSignal(full);
-        SemaphoreSignal(lock1);
+        if(RRcount == 0){
+            RRcount = 5;
+            SemaphoreSignal(lock1);
+        }
+        else
+            SemaphoreSignal(lock2);
     }
 }
 
@@ -77,9 +90,9 @@ void main(void) {
     SemaphoreCreate(&full, 0);
     SemaphoreCreate(&mutex, 1);
     SemaphoreCreate(&empty, 1);
-    SemaphoreCreate(&lock1, 0);
-    SemaphoreCreate(&lock2, 1);
-
+    SemaphoreCreate(&lock1, 1);
+    SemaphoreCreate(&lock2, 0);
+    RRcount = RR;
     ThreadCreate(Producer1);
     ThreadCreate(Producer2);
     Consumer();

@@ -5,12 +5,20 @@
 #ifndef __PREEMPTIVE_H__
 #define __PREEMPTIVE_H__
 
-#define MAXTHREADS 4 /* not including the scheduler */
+#define MAXTHREADS (char)4 /* not including the scheduler */
 /* the scheduler does not take up a thread of its own */
 #define RR 5  
 
 #define CNAME(s) _ ## s
 #define LABEL(label) label ## $
+
+typedef char ThreadID;
+typedef void (*FunctionPtr)(void);
+
+__data __at(0x35) ThreadID currentThread;
+__data __at(0x38) unsigned char time;
+__data __at(0x39) unsigned char delays[4];
+__data __at(0x2B) char timeInterval;
 
 #define SemaphoreWaitBody(s, label){ 				\
 	__asm							 				\
@@ -68,8 +76,12 @@
     __endasm;				\
 }
 
-typedef char ThreadID;
-typedef void (*FunctionPtr)(void);
+#define delay(n)\
+        delays[currentThread] = time + n;\
+        while( delays[currentThread] != time ){}
+
+#define PrintInterupt {while(!TI){} TI = 0;}
+
 
 void SemaphoreCreate(char *, char);
 
@@ -77,7 +89,7 @@ ThreadID ThreadCreate(FunctionPtr);
 void ThreadYield(void);
 void ThreadExit(void);
 void myTimer0Handler();
-void delay(unsigned char);
+//void delay(unsigned char);
 unsigned char now(void);
 
 #endif

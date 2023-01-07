@@ -10,14 +10,11 @@ void SemaphoreCreate(char *s, char n) {
    return;
 }
 
-__data __at(0x30) char threadSP[4];
+__data __at(0x30) char threadSP[MAXTHREADS];
 __data __at(0x34) char bitmap; //check if thread exist
-__data __at(0x35) ThreadID currentThread;
 __data __at(0x36) char oldThreadSP;
 __data __at(0x37) ThreadID newThread;
-__data __at(0x38) unsigned char time;
-__data __at(0x39) unsigned char delays[3];
-
+__data __at(0x2A) char j;
 
 
 #define SAVESTATE {					\
@@ -48,9 +45,10 @@ void Bootstrap(void) {
     TMOD = 0;   // timer 0 mode 0
     IE = 0x82;  // enable timer 0 interrupt; keep consumer polling
     TR0 = 1;    // set bit TR0 to start running timer 0
-
-    for (int i = 0; i < 4; i++)
-        threadSP[i] = 0x3F + 0x10 * i;
+    time = 0;
+    timeInterval = 0;
+    for (j = 0; j < MAXTHREADS; j++)
+        threadSP[j] = 0x3F + 0x10 * j;
     currentThread = ThreadCreate(main);
     RESTORESTATE;
 }
@@ -59,7 +57,7 @@ ThreadID ThreadCreate(FunctionPtr fp) {
     if (bitmap == 0x15)
         return -1;
     // a, b
-    __critical{
+    EA = 0;//__critical{
         if( !( bitmap & 1 ) ){
             bitmap |= 1;
             newThread = 0;
@@ -100,7 +98,7 @@ ThreadID ThreadCreate(FunctionPtr fp) {
     threadSP[newThread] = SP;
     // h
     SP = oldThreadSP;
-    }
+    EA = 1;//}
     // i
     return newThread;
 }
@@ -109,7 +107,7 @@ void ThreadYield(void) {
     SAVESTATE;
     do {
         currentThread++;
-        if (currentThread > 3)
+        if (currentThread == MAXTHREADS)
             currentThread = 0;
         if (bitmap & (1 << currentThread))
             break;
@@ -118,32 +116,38 @@ void ThreadYield(void) {
 }
 
 void ThreadExit(void) {
-    bitmap ^= (1 << currentThread);
-    do {
-        currentThread++;
-        if (currentThread > 3)
-            currentThread = 0;
-        if (currentThread == 0 && (bitmap & 0x01) == 0x01)
-            break;
-        else if (currentThread == 1 && (bitmap & 0x02) == 0x02)
-            break;
-        else if (currentThread == 2 && (bitmap & 0x04) == 0x04)
-            break;
-        else if (currentThread == 3 && (bitmap & 0x08) == 0x08)
-            break;
-    } while (1);
-
+    EA = 0;
+    bitmap -= (1 << currentThread);
+    
+    if(bitmap & 1)
+        currentThread = 0;
+    else if(bitmap & 2)
+        currentThread = 1;
+    else if(bitmap & 4)
+        currentThread = 2;
+    else if(bitmap & 8)
+        currentThread = 3;
+    else
+        while(1){}
     RESTORESTATE;
+    EA = 1;
 }
 
 void myTimer0Handler() {
     EA = 0;
     SAVESTATE;
     SAVERIGISTER;
-    time++;
+    timeInterval++;
+    if(timeInterval == 8){
+        time++;
+        timeInterval = 0;
+    }
+    if(time > 99)
+        time = 0;
+    
     do {
         currentThread++;
-        if (currentThread >= 3)
+        if (currentThread == MAXTHREADS)
             currentThread = 0;
         if (bitmap & (1 << currentThread))
             break;
@@ -156,13 +160,7 @@ void myTimer0Handler() {
 	__endasm;
 }
 
-void delay(unsigned char n) {
-      /* set up a delay for current thread */
-      //EA = 0;
-      delays[currentThread] = time + n;
-      while( delays[currentThread] != time ){}
-      //EA = 1;
-}
+
 unsigned char now(void){
     return time;
 }

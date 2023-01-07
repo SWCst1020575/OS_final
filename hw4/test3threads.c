@@ -76,11 +76,11 @@ void Consumer(void) {
         SemaphoreWaitBody(full, __COUNTER__);
         SemaphoreWaitBody(mutex, __COUNTER__);
         __critical{
-            // polling
             SBUF = shared;
         }
         SemaphoreSignal(mutex);
         SemaphoreSignal(empty);
+        // polling
         while(!TI){}
         TI = 0;
     }

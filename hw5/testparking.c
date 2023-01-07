@@ -94,7 +94,7 @@ void main(void) {
     SemaphoreCreate(&mutex, 1);
     SemaphoreCreate(&empty, 2); // 2 parking space
     SemaphoreCreate(&nextCar, 0);
-    SemaphoreCreate(&wait, 1);
+    SemaphoreCreate(&wait, 1); // prevent third car is always waiting
     
     EA = 1;
     //ThreadCreate(Producer);

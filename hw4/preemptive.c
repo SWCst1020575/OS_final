@@ -47,8 +47,6 @@ void Bootstrap(void) {
     IE = 0x82;  // enable timer 0 interrupt; keep consumer polling
     TR0 = 1;    // set bit TR0 to start running timer 0
 
-    for (int i = 0; i < 4; i++)
-        threadSP[i] = 0x3F + 0x10 * i;
     currentThread = ThreadCreate(main);
     RESTORESTATE;
 }
@@ -57,20 +55,20 @@ ThreadID ThreadCreate(FunctionPtr fp) {
     if (bitmap == 0x15)
         return -1;
     // a, b
-    __critical{
-        if( !( bitmap & 1 ) ){
-            bitmap |= 1;
-            newThread = 0;
-        }else if( !( bitmap & 2 ) ){
-            bitmap |= 2;
-            newThread = 1;
-        }else if( !( bitmap & 4 ) ){
-            bitmap |= 4;
-            newThread = 2;
-        }else if( !( bitmap & 8 ) ){
-            bitmap |= 8;
-            newThread = 3;
-        }
+    EA=0;
+    if( !( bitmap & 1 ) ){
+        bitmap |= 1;
+        newThread = 0;
+    }else if( !( bitmap & 2 ) ){
+        bitmap |= 2;
+        newThread = 1;
+    }else if( !( bitmap & 4 ) ){
+        bitmap |= 4;
+        newThread = 2;
+    }else if( !( bitmap & 8 ) ){
+        bitmap |= 8;
+        newThread = 3;
+    }
     // c
     oldThreadSP = SP;
     SP = (0x3F) + (0x10) * newThread;
@@ -98,7 +96,7 @@ ThreadID ThreadCreate(FunctionPtr fp) {
     threadSP[newThread] = SP;
     // h
     SP = oldThreadSP;
-    }
+    EA=1;
     // i
     return newThread;
 }

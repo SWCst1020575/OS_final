@@ -47,8 +47,6 @@ void Bootstrap(void) {
     TR0 = 1;    // set bit TR0 to start running timer 0
     time = 0;
     timeInterval = 0;
-    for (j = 0; j < MAXTHREADS; j++)
-        threadSP[j] = 0x3F + 0x10 * j;
     currentThread = ThreadCreate(main);
     RESTORESTATE;
 }

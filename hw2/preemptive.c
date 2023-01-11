@@ -95,8 +95,6 @@ void Bootstrap(void)
 	IE = 0x82; // enable timer 0 interrupt; keep consumer polling 
 	TR0 = 1; // set bit TR0 to start running timer 0
 
-	for(int i=0;i<4;i++)
-		threadSP[i] = 0x3F + 0x10 * i;
 	currentThread = ThreadCreate(main);
 	RESTORESTATE;
 }
@@ -168,7 +166,7 @@ ThreadID ThreadCreate(FunctionPtr fp)
 	
 	// c
 	oldThreadSP = SP;
-	SP = threadSP[newThread];
+	SP = (0x3F) + (0x10) * newThread;
 	
 	// d
 	__asm

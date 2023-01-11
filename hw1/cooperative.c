@@ -19,6 +19,7 @@ __data __at (0x35) ThreadID currentThread;
 __data __at (0x36) char oldThreadSP;
 __data __at (0x37) ThreadID newThread;
 __data __at (0x38) ThreadID threadNum;
+__data __at (0x20) char i;
 
 
 
@@ -91,8 +92,8 @@ void Bootstrap(void)
      *     so that it starts running main().
      */
 	bitmap = 0;
-	for(int i=0;i<4;i++)
-		threadSP[i] = 0x3F + 0x10 * i;
+	/*for(i=0;i<4;i++)
+		threadSP[i] = 0x3F + 0x10 * i;*/
 	currentThread = ThreadCreate(main);
 	RESTORESTATE;
 }
@@ -164,7 +165,7 @@ ThreadID ThreadCreate(FunctionPtr fp)
 	
 	// c
 	oldThreadSP = SP;
-	SP = threadSP[newThread];
+	SP = (0x3F) + (0x10) * newThread;
 	
 	// d
 	__asm

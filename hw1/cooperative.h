@@ -1,12 +1,4 @@
-/*
- * file: cooperative.h
- *
- * this is the include file for the cooperative multithreading
- * package.  It is to be compiled by SDCC and targets the EdSim51 as
- * the target architecture.
- *
- * CS 3423 Fall 2018
- */
+
 
 #ifndef __COOPERATIVE_H__
 #define __COOPERATIVE_H__

@@ -26,6 +26,7 @@
 	__endasm;					\
 }
 
+
 typedef char ThreadID;
 typedef void (*FunctionPtr)(void);
 

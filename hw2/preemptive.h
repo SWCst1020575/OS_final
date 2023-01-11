@@ -5,7 +5,6 @@
  * package.  It is to be compiled by SDCC and targets the EdSim51 as
  * the target architecture.
  *
- * CS 3423 Fall 2018
  */
 
 #ifndef __PREEMPTIVE_H__
